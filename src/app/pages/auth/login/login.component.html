@@ -7,7 +7,7 @@
       </div>
     </ng-template>
 
-    <div class="flex flex-column gap-3">
+    <form [formGroup]="form" class="flex flex-column gap-3">
       <div class="flex flex-column gap-2">
         <label for="email" class="font-medium">Correo</label>
         <input
@@ -17,7 +17,10 @@
           placeholder="correo@ejemplo.com"
           class="w-full"
           autocomplete="email"
+          formControlName="email"
         />
+        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['email']">Correo inválido.</small>
       </div>
 
       <div class="flex flex-column gap-2">
@@ -30,15 +33,32 @@
           styleClass="w-full"
           inputStyleClass="w-full"
           autocomplete="current-password"
+          formControlName="password"
         ></p-password>
+        <small class="text-red-500" *ngIf="f.password.touched && f.password.errors?.['required']">Campo obligatorio.</small>
+      </div>
+
+      <small class="text-red-500 text-center" *ngIf="error">{{ error }}</small>
+
+      <div class="text-center">
+        <p-button
+          label="Entrar"
+          icon="pi pi-sign-in"
+          class="w-full"
+          (onClick)="login()"
+          [disabled]="form.invalid">
+        </p-button>
       </div>
 
       <div class="text-center">
-        <p-button label="Entrar" icon="pi pi-sign-in" class="w-full" routerLink="/landing-page"></p-button>
+        <p-button
+          label="¿No tienes cuenta?"
+          icon="pi pi-user-plus"
+          severity="secondary"
+          [outlined]="true"
+          [routerLink]="['/auth/register']">
+        </p-button>
       </div>
-      <div class="text-center">
-        <p-button label="¿No tienes cuenta?" icon="pi pi-user-plus" class="p-button-outlined" routerLink="/auth/register"></p-button>
-      </div>
-    </div>
+    </form>
   </p-card>
 </div>

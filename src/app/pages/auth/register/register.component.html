@@ -7,29 +7,38 @@
       </div>
     </ng-template>
 
-    <div class="flex flex-column gap-3">
+    <form [formGroup]="form" class="flex flex-column gap-3">
       <div class="flex flex-column gap-2">
-        <label for="email" class="font-medium">Correo</label>
-        <input
-          id="email"
-          type="email"
-          pInputText
-          placeholder="correo@ejemplo.com"
-          class="w-full"
-          autocomplete="email"
-        />
+        <label for="username" class="font-medium">Usuario</label>
+        <input id="username" type="text" pInputText class="w-full" formControlName="username" />
+        <small class="text-red-500" *ngIf="f.username.touched && f.username.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500" *ngIf="f.username.touched && f.username.errors?.['minlength']">Mínimo 3 caracteres.</small>
       </div>
 
-        <div class="flex flex-column gap-2">
-            <label for="name" class="font-medium">Nombre</label>
-            <input
-            id="name"
-            type="text"
-            pInputText
-            placeholder="Nombre completo"
-            class="w-full"
-            autocomplete="name"
-            />
+      <div class="flex flex-column gap-2">
+        <label for="email" class="font-medium">Correo</label>
+        <input id="email" type="email" pInputText class="w-full" formControlName="email" />
+        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['email']">Correo inválido.</small>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="fullName" class="font-medium">Nombre completo</label>
+        <input id="fullName" type="text" pInputText class="w-full" formControlName="fullName" />
+        <small class="text-red-500" *ngIf="f.fullName.touched && f.fullName.errors?.['required']">Campo obligatorio.</small>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="address" class="font-medium">Dirección</label>
+        <input id="address" type="text" pInputText class="w-full" formControlName="address" />
+        <small class="text-red-500" *ngIf="f.address.touched && f.address.errors?.['required']">Campo obligatorio.</small>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="phone" class="font-medium">Teléfono</label>
+        <input id="phone" type="text" pInputText class="w-full" formControlName="phone" inputmode="numeric" />
+        <small class="text-red-500" *ngIf="f.phone.touched && f.phone.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500" *ngIf="f.phone.touched && f.phone.errors?.['pattern']">Solo números.</small>
       </div>
 
       <div class="flex flex-column gap-2">
@@ -38,20 +47,56 @@
           inputId="password"
           [toggleMask]="true"
           [feedback]="false"
-          placeholder="Tu contraseña"
           styleClass="w-full"
           inputStyleClass="w-full"
-          autocomplete="current-password"
+          formControlName="password"
         ></p-password>
-      </div>
-      
-      <div class="text-center">
-        <p-button label="Registrarse" icon="pi pi-user-plus" class="w-full" routerLink="/auth/login"></p-button>
+
+        <small class="text-red-500" *ngIf="f.password.touched && f.password.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500" *ngIf="f.password.touched && f.password.errors?.['minlength']">
+          Mínimo 10 caracteres.
+        </small>
+        <small class="text-red-500" *ngIf="f.password.touched && f.password.errors?.['specialChar']">
+          Debe incluir al menos 1 símbolo especial: {{ specials }}
+        </small>
       </div>
 
-      <div class="text-center">
-        <p-button label="¿Ya tienes cuenta?" icon="pi pi-sign-in" class="p-button-outlined" routerLink="/auth/login"></p-button>
+      <div class="flex flex-column gap-2">
+        <label for="confirmPassword" class="font-medium">Confirmar contraseña</label>
+        <p-password
+          inputId="confirmPassword"
+          [toggleMask]="true"
+          [feedback]="false"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          formControlName="confirmPassword"
+        ></p-password>
+
+        <small class="text-red-500" *ngIf="f.confirmPassword.touched && f.confirmPassword.errors?.['required']">
+          Campo obligatorio.
+        </small>
+        <small class="text-red-500" *ngIf="form.touched && form.errors?.['passwordMismatch']">
+          Las contraseñas no coinciden.
+        </small>
       </div>
-    </div>
+
+      <p-button
+        label="Registrarse"
+        icon="pi pi-user-plus"
+        class="w-full"
+        (onClick)="save()"
+        [disabled]="form.invalid">
+      </p-button>
+
+      <div class="text-center">
+        <p-button
+          label="¿Ya tienes cuenta?"
+          icon="pi pi-sign-in"
+          severity="secondary"
+          [outlined]="true"
+          [routerLink]="['/auth/login']">
+        </p-button>
+      </div>
+    </form>
   </p-card>
 </div>
