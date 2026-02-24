@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -8,19 +8,17 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-login',
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
-    ButtonModule,
     CardModule,
     InputTextModule,
-    PasswordModule
+    PasswordModule,
+    ButtonModule,
+    RouterModule
   ],
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css']
 })
-export class AppComponent {
-  title = 'erp-mauricio-gabriel-vazquez';
-}
+export class LoginComponent {}
