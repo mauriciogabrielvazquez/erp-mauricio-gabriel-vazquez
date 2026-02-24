@@ -1,0 +1,57 @@
+<div class="min-h-screen flex align-items-center justify-content-center p-3">
+  <p-card class="w-full sm:w-30rem shadow-2">
+    <ng-template pTemplate="header">
+      <div class="text-center pt-3">
+        <h2 class="m-0">Registro</h2>
+        <p class="mt-2 mb-0 text-500">Crea una nueva cuenta</p>
+      </div>
+    </ng-template>
+
+    <div class="flex flex-column gap-3">
+      <div class="flex flex-column gap-2">
+        <label for="email" class="font-medium">Correo</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          placeholder="correo@ejemplo.com"
+          class="w-full"
+          autocomplete="email"
+        />
+      </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="name" class="font-medium">Nombre</label>
+            <input
+            id="name"
+            type="text"
+            pInputText
+            placeholder="Nombre completo"
+            class="w-full"
+            autocomplete="name"
+            />
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="password" class="font-medium">Contraseña</label>
+        <p-password
+          inputId="password"
+          [toggleMask]="true"
+          [feedback]="false"
+          placeholder="Tu contraseña"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          autocomplete="current-password"
+        ></p-password>
+      </div>
+      
+      <div class="text-center">
+        <p-button label="Registrarse" icon="pi pi-user-plus" class="w-full" routerLink="/auth/login"></p-button>
+      </div>
+
+      <div class="text-center">
+        <p-button label="¿Ya tienes cuenta?" icon="pi pi-sign-in" class="p-button-outlined" routerLink="/auth/login"></p-button>
+      </div>
+    </div>
+  </p-card>
+</div>
