@@ -1,0 +1,15 @@
+<div class="card flex justify-content-left">
+    <p-sidebar [(visible)]="sidebarVisible">
+        <h3>ErpMauricioGabrielVazquez</h3>
+        <div style="margin-bottom: 50px;">
+            <p-button label="Group" icon="pi pi-home" class="w-full mb-2" [routerLink]="['/group']"></p-button>
+        </div>
+        <div>
+            <p-button label="User" icon="pi pi-user" class="w-full mb-2" [routerLink]="['/user']"></p-button>
+        </div>
+        <div style="margin-top: 550px;">
+            <p>version: 19.0.0</p>
+        </div>
+    </p-sidebar>
+    <p-button (onClick)="sidebarVisible = true" icon="pi pi-arrow-right" />
+</div>

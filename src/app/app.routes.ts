@@ -16,6 +16,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/landing-page/landing-page.component').then(m => m.LandingPageComponent),
   },
+  {
+    path: 'group',
+    loadComponent: () =>
+      import('./pages/group/group.component').then(m => m.GroupComponent),
+  },
+  {
+    path: 'user',
+    loadComponent: () =>
+      import('./pages/user/user.component').then(m => m.UserComponent),
+  },
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
   { path: '**', redirectTo: 'auth/login' }
 ];
