@@ -1,17 +1,66 @@
-<app-sidebar></app-sidebar>
+<p-toast></p-toast>
+
 <p-card styleClass="w-full">
   <ng-template pTemplate="title">User</ng-template>
 
-  <div class="flex flex-column gap-2">
-    <div><b>Usuario:</b> mauricio_gv</div>
-    <div><b>Correo:</b> mauriciogmail.com</div>
-    <div><b>Nombre:</b> Mauricio Gabriel Vázquez</div>
-    <div><b>Dirección:</b> Av. Siempre Viva 742, Qro.</div>
-    <div><b>Teléfono:</b> 4421234567</div>
-    <div><b>Rol:</b> Administrador</div>
+  <!-- VIEW -->
+  <div class="flex flex-column gap-2" *ngIf="!editMode">
+    <div><b>Username:</b> {{ user.username }}</div>
+    <div><b>Email:</b> {{ user.email }}</div>
+    <div><b>Full Name:</b> {{ user.fullName }}</div>
+    <div><b>Address:</b> {{ user.address }}</div>
+    <div><b>Phone:</b> {{ user.phone }}</div>
+    <div><b>Role:</b> {{ user.role }}</div>
   </div>
 
+  <!-- EDIT -->
+  <form class="flex flex-column gap-3" *ngIf="editMode" [formGroup]="form">
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Username</label>
+      <input pInputText class="w-full" formControlName="username" />
+      <small class="text-red-500" *ngIf="f.username.touched && f.username.errors?.['required']">Required.</small>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Email</label>
+      <input pInputText class="w-full" formControlName="email" />
+      <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['required']">Required.</small>
+      <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['email']">Invalid email.</small>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Full Name</label>
+      <input pInputText class="w-full" formControlName="fullName" />
+      <small class="text-red-500" *ngIf="f.fullName.touched && f.fullName.errors?.['required']">Required.</small>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Address</label>
+      <input pInputText class="w-full" formControlName="address" />
+      <small class="text-red-500" *ngIf="f.address.touched && f.address.errors?.['required']">Required.</small>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Phone</label>
+      <input pInputText class="w-full" formControlName="phone" />
+      <small class="text-red-500" *ngIf="f.phone.touched && f.phone.errors?.['required']">Required.</small>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Role</label>
+      <input pInputText class="w-full" formControlName="role" />
+      <small class="text-red-500" *ngIf="f.role.touched && f.role.errors?.['required']">Required.</small>
+    </div>
+  </form>
+
   <ng-template pTemplate="footer">
-    <p-button label="Editar" icon="pi pi-pencil"></p-button>
+    <div class="flex gap-2 justify-content-between">
+      <div class="flex gap-2">
+        <p-button *ngIf="!editMode" label="Edit" icon="pi pi-pencil" (onClick)="startEdit()"></p-button>
+
+        <p-button *ngIf="editMode" label="Save" icon="pi pi-save" (onClick)="save()"></p-button>
+        <p-button *ngIf="editMode" label="Cancel" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="cancel()"></p-button>
+      </div>
+    </div>
   </ng-template>
 </p-card>

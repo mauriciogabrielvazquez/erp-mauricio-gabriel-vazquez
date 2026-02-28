@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { SidebarModule } from 'primeng/sidebar';
 import { ButtonModule } from 'primeng/button';
-import { RouterModule } from '@angular/router';
+import { RouterModule, RouterLink  } from '@angular/router';
 
 import { RippleModule } from 'primeng/ripple';
 import { AvatarModule } from 'primeng/avatar';
@@ -10,7 +10,7 @@ import { Sidebar } from 'primeng/sidebar'
 
 @Component({
   selector: 'app-sidebar',
-  imports: [SidebarModule, ButtonModule, RouterModule, RippleModule, AvatarModule, StyleClassModule, Sidebar],
+  imports: [SidebarModule, ButtonModule, RouterModule, RippleModule, AvatarModule, StyleClassModule, Sidebar, RouterLink],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })

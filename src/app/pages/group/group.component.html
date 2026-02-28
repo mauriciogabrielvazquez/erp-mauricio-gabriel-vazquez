@@ -1,14 +1,126 @@
-<app-sidebar></app-sidebar>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <div class="flex flex-column gap-3">
+  <!-- Header / Total -->
   <div class="flex align-items-center justify-content-between">
-    <h2 class="m-0">Total</h2>
+    <h2 class="m-0">Groups</h2>
     <p-card styleClass="p-2 w-6rem text-center">
-      <div class="text-2xl font-bold">12</div>
+      <div class="text-2xl font-bold">{{ groups.length }}</div>
     </p-card>
   </div>
 
-  <div class="text-sm font-medium">Advance:</div>
+  <!-- Actions -->
+  <div class="flex gap-2 flex-wrap">
+    <p-button label="Add Group" icon="pi pi-plus" (onClick)="startCreate()"></p-button>
+  </div>
 
-  <p-card styleClass="w-full h-12rem bg-primary border-none">
+  <!-- Form (Create / Edit) -->
+  <p-card *ngIf="formVisible" styleClass="w-full">
+    <ng-template pTemplate="title">{{ editMode ? 'Edit Group' : 'New Group' }}</ng-template>
+
+    <div class="grid">
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Id</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.id" [disabled]="editMode" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Name</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.name" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Category</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.category" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Level</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.level" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Author</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.author" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Members</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.members" />
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="font-medium">Tickets</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.tickets" />
+      </div>
+
+      <div class="col-12 md:col-8">
+        <label class="font-medium">Image URL</label>
+        <input pInputText class="w-full" [(ngModel)]="draft.imageUrl" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-content-end">
+        <p-button
+          label="Save"
+          icon="pi pi-save"
+          (onClick)="save()">
+        </p-button>
+
+        <p-button
+          label="Cancel"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancel()">
+        </p-button>
+      </div>
+    </ng-template>
   </p-card>
+
+  <!-- Cards grid -->
+  <div class="grid">
+    <div class="col-12 md:col-6 lg:col-4" *ngFor="let g of groups">
+      <p-card styleClass="w-full">
+        <ng-template pTemplate="header">
+          <img
+            [src]="g.imageUrl"
+            alt="group"
+            style="width: 100%; height: 160px; object-fit: cover; display: block;"
+          />
+        </ng-template>
+
+        <ng-template pTemplate="title">{{ g.name }}</ng-template>
+        <ng-template pTemplate="subtitle">Category: {{ g.category }} • Level: {{ g.level }}</ng-template>
+
+        <div class="flex flex-column gap-2">
+          <div><b>Id:</b> {{ g.id }}</div>
+          <div><b>Author:</b> {{ g.author }}</div>
+          <div><b>Members:</b> {{ g.members }}</div>
+          <div><b>Tickets:</b> {{ g.tickets }}</div>
+        </div>
+
+        <ng-template pTemplate="footer">
+          <div class="flex gap-2 justify-content-between">
+            <div class="flex gap-2">
+              <p-button
+                label="Edit"
+                icon="pi pi-pencil"
+                (onClick)="startEdit(g)">
+              </p-button>
+              <p-button
+                label="Delete"
+                icon="pi pi-trash"
+                severity="danger"
+                [outlined]="true"
+                (onClick)="confirmDelete(g)">
+              </p-button>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  </div>
 </div>

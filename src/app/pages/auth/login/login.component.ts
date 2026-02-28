@@ -44,7 +44,7 @@ export class LoginComponent {
     const password = String(this.form.value.password ?? '');
 
     if (email === 'mauricio@gmail.com' && password === '1234') {
-      this.router.navigate(['/landing-page']);
+      this.router.navigate(['/home/group']);
     } else {
       this.error = 'Correo o contraseña incorrectos.';
     }
