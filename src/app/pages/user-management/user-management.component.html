@@ -1,0 +1,116 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="flex flex-column gap-4 h-full">
+  <div class="flex align-items-center justify-content-between">
+    <h2 class="m-0">Gestión de Usuarios</h2>
+  </div>
+
+  <div class="card shadow-2 border-round-xl surface-card p-4">
+    <p-toolbar styleClass="mb-4 gap-2 border-none bg-transparent p-0">
+      <ng-template pTemplate="left">
+        <p-button *hasPermission="'add-user'" severity="success" label="Nuevo Usuario" icon="pi pi-plus" (onClick)="openNew()"></p-button>
+      </ng-template>
+    </p-toolbar>
+
+    <p-table 
+      #dt 
+      [value]="users" 
+      [rows]="10" 
+      [paginator]="true" 
+      [globalFilterFields]="['fullName', 'username', 'email']" 
+      responsiveLayout="scroll"
+      [rowHover]="true" 
+      dataKey="id">
+      
+      <ng-template pTemplate="caption">
+        <div class="flex align-items-center justify-content-between">
+          <h5 class="m-0 text-700">Directorio del Sistema</h5>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar usuario..." />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="fullName">Nombre <p-sortIcon field="fullName"></p-sortIcon></th>
+          <th pSortableColumn="username">Usuario <p-sortIcon field="username"></p-sortIcon></th>
+          <th>Contacto</th>
+          <th pSortableColumn="status">Estado <p-sortIcon field="status"></p-sortIcon></th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td class="font-medium text-color-secondary">{{ user.id }}</td>
+          <td>{{ user.fullName }}</td>
+          <td>{{ user.username }}</td>
+          <td>
+            <div class="flex flex-column gap-1">
+              <span class="text-sm"><i class="pi pi-envelope mr-1 text-500"></i>{{ user.email }}</span>
+              <span class="text-sm"><i class="pi pi-phone mr-1 text-500"></i>{{ user.phone }}</span>
+            </div>
+          </td>
+          <td>
+            <p-tag 
+              [value]="user.status" 
+              [severity]="getSeverity(user.status)" 
+              class="cursor-pointer"
+              (click)="toggleStatus(user)">
+            </p-tag>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <p-button *hasPermission="'edit-user'" icon="pi pi-pencil" [rounded]="true" [outlined]="true" severity="info" (onClick)="editUser(user)"></p-button>
+              <p-button *hasPermission="'delete-user'" icon="pi pi-trash" [rounded]="true" [outlined]="true" severity="danger" (onClick)="deleteUser(user)"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="userDialog" [style]="{ width: '450px' }" [header]="editMode ? 'Editar Usuario' : 'Nuevo Usuario'" [modal]="true" styleClass="p-fluid">
+  <ng-template pTemplate="content">
+    
+    <div class="field mb-4 mt-3">
+      <label for="fullName" class="font-medium">Nombre Completo</label>
+      <input type="text" pInputText id="fullName" [(ngModel)]="user.fullName" required autofocus />
+      <small class="p-error block mt-1" *ngIf="submitted && !user.fullName">El nombre es requerido.</small>
+    </div>
+
+    <div class="field mb-4">
+      <label for="username" class="font-medium">Nombre de Usuario (Username)</label>
+      <input type="text" pInputText id="username" [(ngModel)]="user.username" required />
+      <small class="p-error block mt-1" *ngIf="submitted && !user.username">El username es requerido.</small>
+    </div>
+
+    <div class="field mb-4">
+      <label for="email" class="font-medium">Correo Electrónico</label>
+      <input type="email" pInputText id="email" [(ngModel)]="user.email" />
+    </div>
+
+    <div class="formgrid grid mb-4">
+      <div class="field col">
+        <label for="phone" class="font-medium">Teléfono</label>
+        <input type="text" pInputText id="phone" [(ngModel)]="user.phone" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="address" class="font-medium">Dirección</label>
+      <textarea id="address" pInputText class="w-full" [(ngModel)]="user.address" rows="3"></textarea>
+    </div>
+    
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveUser()"></p-button>
+  </ng-template>
+</p-dialog>

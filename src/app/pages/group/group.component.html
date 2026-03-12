@@ -1,119 +1,133 @@
 <p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
-<div class="flex flex-column gap-3">
-  <!-- Header / Total -->
-  <div class="flex align-items-center justify-content-between">
-    <h2 class="m-0">Groups</h2>
-    <p-card styleClass="p-2 w-6rem text-center">
-      <div class="text-2xl font-bold">{{ groups.length }}</div>
-    </p-card>
+<div class="flex flex-column gap-4">
+  <div class="flex align-items-center justify-content-between bg-white p-3 border-round-xl shadow-1">
+    <div>
+      <h2 class="m-0 text-900">Administración de Grupos</h2>
+      <p class="m-0 text-600">Organiza tus clases y gestiona a tus alumnos</p>
+    </div>
+    <div class="flex flex-column align-items-center">
+      <span class="text-sm text-600 font-medium">Total de grupos</span>
+      <span class="text-3xl font-bold text-primary">{{ groups.length }}</span>
+    </div>
   </div>
 
-  <!-- Actions -->
-  <div class="flex gap-2 flex-wrap">
-    <p-button label="Add Group" icon="pi pi-plus" (onClick)="startCreate()"></p-button>
+  <div class="flex gap-2">
+    <p-button 
+      *hasPermission="'add-group'" 
+      label="Crear nuevo grupo" 
+      icon="pi pi-plus" 
+      styleClass="p-button-raised border-round-lg"
+      (onClick)="startCreate()">
+    </p-button>
   </div>
 
-  <!-- Form (Create / Edit) -->
-  <p-card *ngIf="formVisible" styleClass="w-full">
-    <ng-template pTemplate="title">{{ editMode ? 'Edit Group' : 'New Group' }}</ng-template>
-
-    <div class="grid">
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Id</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.id" [disabled]="editMode" />
+  <p-card *ngIf="formVisible" styleClass="w-full shadow-3 border-round-xl border-top-3 border-primary">
+    <ng-template pTemplate="title">
+      <div class="flex align-items-center gap-2">
+        <i [class]="editMode ? 'pi pi-pencil text-primary' : 'pi pi-plus-circle text-success'"></i>
+        <span>{{ editMode ? 'Actualizar información del grupo' : 'Registrar nuevo grupo escolar' }}</span>
       </div>
+    </ng-template>
 
+    <div class="grid mt-2">
       <div class="col-12 md:col-4">
-        <label class="font-medium">Name</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.name" />
+        <label class="font-semibold text-700">Código de identificación</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.id" [disabled]="editMode" placeholder="Ej: MAT-101" />
       </div>
-
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Category</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.category" />
-      </div>
-
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Level</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.level" />
-      </div>
-
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Author</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.author" />
-      </div>
-
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Members</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.members" />
-      </div>
-
-      <div class="col-12 md:col-4">
-        <label class="font-medium">Tickets</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.tickets" />
-      </div>
-
       <div class="col-12 md:col-8">
-        <label class="font-medium">Image URL</label>
-        <input pInputText class="w-full" [(ngModel)]="draft.imageUrl" />
+        <label class="font-semibold text-700">Nombre del grupo o materia</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.name" placeholder="Ej: Matemáticas Avanzadas" />
+      </div>
+      <div class="col-12 md:col-4">
+        <label class="font-semibold text-700">Categoría</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.category" placeholder="Ej: Ciencias Exactas" />
+      </div>
+      <div class="col-12 md:col-4">
+        <label class="font-semibold text-700">Nivel académico</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.level" placeholder="Ej: Licenciatura" />
+      </div>
+      <div class="col-12 md:col-4">
+        <label class="font-semibold text-700">Profesor responsable</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.author" placeholder="Nombre del docente" />
+      </div>
+      <div class="col-12">
+        <label class="font-semibold text-700">Enlace de la imagen de portada</label>
+        <input pInputText class="w-full mt-2" [(ngModel)]="draft.imageUrl" placeholder="https://enlace-a-tu-imagen.jpg" />
       </div>
     </div>
 
     <ng-template pTemplate="footer">
       <div class="flex gap-2 justify-content-end">
-        <p-button
-          label="Save"
-          icon="pi pi-save"
-          (onClick)="save()">
-        </p-button>
-
-        <p-button
-          label="Cancel"
-          icon="pi pi-times"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="cancel()">
-        </p-button>
+        <p-button label="Descartar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="cancel()"></p-button>
+        <p-button label="Guardar información" icon="pi pi-save" (onClick)="save()"></p-button>
       </div>
     </ng-template>
   </p-card>
 
-  <!-- Cards grid -->
   <div class="grid">
     <div class="col-12 md:col-6 lg:col-4" *ngFor="let g of groups">
-      <p-card styleClass="w-full">
+      <p-card styleClass="w-full shadow-2 hover:shadow-4 transition-all transition-duration-300 border-round-xl overflow-hidden h-full">
         <ng-template pTemplate="header">
-          <img
-            [src]="g.imageUrl"
-            alt="group"
-            style="width: 100%; height: 160px; object-fit: cover; display: block;"
-          />
+          <div class="relative">
+            <img [src]="g.imageUrl" alt="portada" style="width: 100%; height: 180px; object-fit: cover; display: block;" />
+            <div class="absolute top-0 right-0 m-2">
+              <span class="px-2 py-1 bg-white-alpha-90 border-round font-bold text-sm shadow-1 text-primary">
+                {{ g.category }}
+              </span>
+            </div>
+          </div>
         </ng-template>
 
-        <ng-template pTemplate="title">{{ g.name }}</ng-template>
-        <ng-template pTemplate="subtitle">Category: {{ g.category }} • Level: {{ g.level }}</ng-template>
+        <h3 class="m-0 text-xl text-900 mb-1">{{ g.name }}</h3>
+        <p class="text-600 text-sm mb-3"><i class="pi pi-book mr-1"></i>Nivel: {{ g.level }}</p>
 
-        <div class="flex flex-column gap-2">
-          <div><b>Id:</b> {{ g.id }}</div>
-          <div><b>Author:</b> {{ g.author }}</div>
-          <div><b>Members:</b> {{ g.members }}</div>
-          <div><b>Tickets:</b> {{ g.tickets }}</div>
+        <div class="flex flex-column gap-3 p-3 surface-50 border-round-lg border-1 border-200">
+          <div class="flex justify-content-between align-items-center">
+            <span class="text-700"><i class="pi pi-id-card mr-2"></i>Folio:</span>
+            <span class="font-bold text-900">{{ g.id }}</span>
+          </div>
+          <div class="flex justify-content-between align-items-center">
+            <span class="text-700"><i class="pi pi-user mr-2"></i>Responsable:</span>
+            <span class="font-medium">{{ g.author }}</span>
+          </div>
+          <div class="flex justify-content-between align-items-center">
+            <span class="text-700"><i class="pi pi-users mr-2"></i>Alumnos:</span>
+            <p-tag [value]="g.members" severity="info" [rounded]="true"></p-tag>
+          </div>
+          <div class="flex justify-content-between align-items-center">
+            <span class="text-700"><i class="pi pi-list mr-2"></i>Tareas activas:</span>
+            <p-tag [value]="g.tickets" severity="warning" [rounded]="true"></p-tag>
+          </div>
         </div>
 
         <ng-template pTemplate="footer">
-          <div class="flex gap-2 justify-content-between">
+          <div class="flex flex-column gap-2">
+            <p-button 
+              *hasPermission="'edit-group'" 
+              label="Gestionar integrantes" 
+              icon="pi pi-users" 
+              styleClass="w-full p-button-info" 
+              (onClick)="openManagement(g)">
+            </p-button>
+            
             <div class="flex gap-2">
-              <p-button
-                label="Edit"
-                icon="pi pi-pencil"
+              <p-button 
+                *hasPermission="'edit-group'" 
+                label="Editar" 
+                icon="pi pi-pencil" 
+                styleClass="flex-1"
+                [outlined]="true"
                 (onClick)="startEdit(g)">
               </p-button>
-              <p-button
-                label="Delete"
-                icon="pi pi-trash"
-                severity="danger"
+              
+              <p-button 
+                *hasPermission="'delete-group'" 
+                label="Borrar" 
+                icon="pi pi-trash" 
+                severity="danger" 
+                class="flex-1"
                 [outlined]="true"
                 (onClick)="confirmDelete(g)">
               </p-button>
@@ -124,3 +138,58 @@
     </div>
   </div>
 </div>
+
+<p-dialog 
+  header="Administración de Alumnos" 
+  [(visible)]="managementVisible" 
+  [modal]="true" 
+  [style]="{ width: '40rem' }"
+  styleClass="border-round-xl">
+  
+  <div *ngIf="selectedGroup" class="flex flex-column gap-4 pt-2">
+    <p class="m-0 text-600">Añade nuevos alumnos al grupo <b>{{ selectedGroup.name }}</b></p>
+    
+    <div class="flex gap-2 p-inputgroup">
+      <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+      <input 
+        pInputText 
+        class="flex-auto" 
+        placeholder="Nombre o correo del alumno..." 
+        [(ngModel)]="newUserInput" 
+        (keyup.enter)="addMember()" />
+      <p-button label="Añadir" icon="pi pi-plus" (onClick)="addMember()"></p-button>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <div class="flex align-items-center justify-content-between mb-2">
+        <h3 class="m-0 text-lg">Lista de integrantes</h3>
+        <span class="text-primary font-bold">{{ selectedGroup.memberList.length }} registrados</span>
+      </div>
+
+      <div *ngIf="selectedGroup.memberList.length === 0" class="text-500 font-italic p-4 text-center surface-100 border-round-lg border-2 border-dashed border-400">
+        <i class="pi pi-users text-4xl mb-2 block text-400"></i>
+        Aún no hay alumnos en este grupo. ¡Añade uno arriba!
+      </div>
+
+      <div class="overflow-y-auto" style="max-height: 300px;">
+        <div *ngFor="let member of selectedGroup.memberList" class="flex align-items-center justify-content-between p-3 mb-2 surface-card border-round-lg border-1 surface-border hover:border-primary transition-colors transition-duration-200">
+          <div class="flex align-items-center gap-3">
+            <p-avatar icon="pi pi-user" shape="circle" styleClass="bg-primary-reverse text-primary"></p-avatar>
+            <span class="font-medium text-900">{{ member.username }}</span>
+          </div>
+          
+          <p-button 
+            *hasPermission="'delete-group'" 
+            icon="pi pi-user-minus" 
+            severity="danger" 
+            [text]="true" 
+            [rounded]="true" 
+            pTooltip="Quitar del grupo"
+            tooltipPosition="left"
+            (onClick)="removeMember(member.id)">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</p-dialog>

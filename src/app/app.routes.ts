@@ -8,7 +8,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/landing-page/landing-page.component').then(m => m.LandingPageComponent),
   },
-
   {
     path: 'auth/login',
     loadComponent: () =>
@@ -36,6 +35,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/group/group.component').then(m => m.GroupComponent),
       },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+      },
+      {
+        path: 'groups-tickets',
+        loadComponent: () =>
+          import('./pages/ticket-board/ticket-board.component').then(m => m.TicketBoardComponent),
+      },
+      {
+        path: 'user-management',
+        loadComponent: () =>
+          import('./pages/user-management/user-management.component').then(m => m.UserManagementComponent),
+      }
     ],
   },
 

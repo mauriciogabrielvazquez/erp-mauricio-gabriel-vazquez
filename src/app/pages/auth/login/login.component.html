@@ -1,63 +1,76 @@
-<div class="min-h-screen flex align-items-center justify-content-center p-3">
-  <p-card class="w-full sm:w-30rem shadow-2">
+<div class="min-h-screen flex align-items-center justify-content-center p-3 surface-ground">
+  <p-card styleClass="w-full sm:w-30rem shadow-4 border-round-xl">
     <ng-template pTemplate="header">
-      <div class="text-center pt-3">
-        <h2 class="m-0">Iniciar sesión</h2>
-        <p class="mt-2 mb-0 text-500">Accede con tu correo y contraseña</p>
+      <div class="text-center pt-5 px-4">
+        <i class="pi pi-lock text-primary text-5xl mb-3"></i>
+        <h2 class="m-0 text-900">¡Hola de nuevo!</h2>
+        <p class="mt-2 mb-0 text-600">Ingresa tus datos para acceder a tu cuenta.</p>
       </div>
     </ng-template>
 
-    <form [formGroup]="form" class="flex flex-column gap-3">
+    <form [formGroup]="form" class="flex flex-column gap-4 mt-2">
+      
       <div class="flex flex-column gap-2">
-        <label for="email" class="font-medium">Correo</label>
-        <input
-          id="email"
-          type="email"
-          pInputText
-          placeholder="correo@ejemplo.com"
-          class="w-full"
-          autocomplete="email"
-          formControlName="email"
-        />
-        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['required']">Campo obligatorio.</small>
-        <small class="text-red-500" *ngIf="f.email.touched && f.email.errors?.['email']">Correo inválido.</small>
+        <label for="email" class="font-semibold text-700">Correo electrónico</label>
+        <span class="p-input-icon-left w-full">
+          <i class="pi pi-envelope text-500"></i>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            placeholder="ejemplo@correo.com"
+            class="w-full p-inputtext-lg"
+            formControlName="email"
+          />
+        </span>
+        <small class="text-red-500 font-medium" *ngIf="f.email.touched && f.email.errors?.['required']">
+          <i class="pi pi-info-circle mr-1"></i>Por favor, escribe tu correo para entrar.
+        </small>
+        <small class="text-red-500 font-medium" *ngIf="f.email.touched && f.email.errors?.['email']">
+          <i class="pi pi-exclamation-circle mr-1"></i>Esa no parece una dirección de correo correcta.
+        </small>
       </div>
 
       <div class="flex flex-column gap-2">
-        <label for="password" class="font-medium">Contraseña</label>
+        <label for="password" class="font-semibold text-700">Contraseña</label>
         <p-password
           inputId="password"
           [toggleMask]="true"
           [feedback]="false"
-          placeholder="Tu contraseña"
+          placeholder="Tu contraseña secreta"
           styleClass="w-full"
-          inputStyleClass="w-full"
-          autocomplete="current-password"
+          inputStyleClass="w-full p-inputtext-lg"
           formControlName="password"
         ></p-password>
-        <small class="text-red-500" *ngIf="f.password.touched && f.password.errors?.['required']">Campo obligatorio.</small>
+        <small class="text-red-500 font-medium" *ngIf="f.password.touched && f.password.errors?.['required']">
+          <i class="pi pi-lock mr-1"></i>Necesitas escribir tu contraseña para ingresar.
+        </small>
       </div>
 
-      <small class="text-red-500 text-center" *ngIf="error">{{ error }}</small>
+      <div *ngIf="error" class="p-3 bg-red-50 border-round-lg flex align-items-center gap-3 text-red-600 border-1 border-red-100">
+        <i class="pi pi-times-circle text-xl"></i>
+        <span class="text-sm font-medium">Los datos no coinciden, revisa tu correo o contraseña.</span>
+      </div>
 
-      <div class="text-center">
+      <div class="mt-2 flex flex-column gap-3">
         <p-button
-          label="Entrar"
+          label="Ingresar"
           icon="pi pi-sign-in"
-          class="w-full"
+          styleClass="w-full p-button-lg shadow-2 border-round-lg"
           (onClick)="login()"
           [disabled]="form.invalid">
         </p-button>
-      </div>
 
-      <div class="text-center">
-        <p-button
-          label="¿No tienes cuenta?"
-          icon="pi pi-user-plus"
-          severity="secondary"
-          [outlined]="true"
-          [routerLink]="['/auth/register']">
-        </p-button>
+        <hr class="border-top-1 surface-border w-full my-2" />
+
+        <div class="text-center">
+          <span class="text-600 mr-2 font-medium">¿Aún no tienes cuenta?</span>
+          <p-button
+            label="Regístrate aquí"
+            styleClass="p-button-link p-0 font-bold"
+            [routerLink]="['/auth/register']">
+          </p-button>
+        </div>
       </div>
     </form>
   </p-card>

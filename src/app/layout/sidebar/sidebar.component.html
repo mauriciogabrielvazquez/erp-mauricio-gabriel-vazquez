@@ -1,32 +1,83 @@
-<div class="flex">
-  <p-sidebar [(visible)]="sidebarVisible">
-    <h3>ErpMauricioGabrielVazquez</h3>
+<div class="flex h-screen">
+  <p-sidebar [(visible)]="sidebarVisible" styleClass="w-20rem flex flex-column">
+    
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center gap-2 pt-2">
+        <i class="pi pi-graduation-cap text-3xl text-primary"></i>
+        <span class="text-xl font-bold text-900">Portal Académico</span>
+      </div>
+    </ng-template>
 
-    <div class="flex flex-column gap-2" style="margin-bottom: 24px;">
+    <div class="flex flex-column h-full justify-content-between py-4">
+      
+      <div class="flex flex-column gap-2">
+        <p class="text-xs font-bold text-500 uppercase px-3 mb-2">Menú Principal</p>
 
-      <p-button
-        label="Group"
-        icon="pi pi-users"
-        class="w-full"
-        [routerLink]="['/home/group']"
-        (onClick)="sidebarVisible = false">
-      </p-button>
+        <p-button
+          *hasPermission="'read-dashboard'"
+          label="Resumen General"
+          icon="pi pi-chart-bar"
+          styleClass="p-button-text w-full justify-content-start text-700 hover:text-primary"
+          [routerLink]="['/home/dashboard']"
+          (onClick)="sidebarVisible = false">
+        </p-button>
 
-      <p-button
-        label="User"
-        icon="pi pi-user"
-        class="w-full"
-        [routerLink]="['/home/user']"
-        (onClick)="sidebarVisible = false">
-      </p-button>
-    </div>
+        <p-button
+          *hasPermission="'read-group'"
+          label="Mis Grupos"
+          icon="pi pi-users"
+          styleClass="p-button-text w-full justify-content-start text-700 hover:text-primary"
+          [routerLink]="['/home/group']"
+          (onClick)="sidebarVisible = false">
+        </p-button>
 
-    <div style="margin-top: 550px;">
-      <p>version: 19.0.0</p>
+        <p-button
+          label="Mi Información"
+          icon="pi pi-user"
+          styleClass="p-button-text w-full justify-content-start text-700 hover:text-primary"
+          [routerLink]="['/home/user']"
+          (onClick)="sidebarVisible = false">
+        </p-button>
+
+        <hr class="border-top-1 surface-border my-2 mx-3" />
+        
+        <p class="text-xs font-bold text-500 uppercase px-3 mb-2" *hasPermission="'read-user'">Administración</p>
+
+        <p-button
+          *hasPermission="'read-user'"
+          label="Control de Usuarios"
+          icon="pi pi-id-card"
+          styleClass="p-button-text w-full justify-content-start text-700 hover:text-primary"
+          [routerLink]="['/home/user-management']"
+          (onClick)="sidebarVisible = false">
+        </p-button>
+      </div>
+
+      <div class="px-3">
+        <div class="surface-100 p-3 border-round-lg flex align-items-center gap-3">
+          <p-avatar icon="pi pi-info-circle" shape="circle" styleClass="bg-white text-primary"></p-avatar>
+          <div class="flex flex-column">
+            <span class="text-xs text-600">Sistema Escolar</span>
+            <span class="text-xs font-bold text-900">Versión 19.0.0</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </p-sidebar>
-  <p-button (onClick)="sidebarVisible = true" icon="pi pi-arrow-right"></p-button>
-  <div class="flex-1 p-3">
+  
+  <div class="p-3">
+    <p-button 
+      (onClick)="sidebarVisible = true" 
+      icon="pi pi-bars" 
+      [rounded]="true" 
+      [raised]="true" 
+      pTooltip="Abrir menú" 
+      tooltipPosition="right">
+    </p-button>
+  </div>
+  
+  <div class="flex-1 p-4 surface-ground overflow-y-auto">
     <router-outlet></router-outlet>
   </div>
 </div>

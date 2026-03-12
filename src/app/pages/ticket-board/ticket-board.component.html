@@ -1,0 +1,169 @@
+<div class="flex flex-column gap-4 h-full">
+  
+  <div class="flex flex-column md:flex-row justify-content-between align-items-center gap-3 bg-white p-3 border-round-xl shadow-1">
+    
+    <div class="flex align-items-center gap-3">
+      <h2 class="m-0 hidden md:block">Tickets</h2>
+      
+      <p-selectButton [options]="viewOptions" [(ngModel)]="currentView" optionLabel="icon" optionValue="value">
+        <ng-template let-item pTemplate>
+          <i [class]="item.icon"></i>
+        </ng-template>
+      </p-selectButton>
+    </div>
+
+    <div class="flex gap-2 flex-wrap justify-content-center">
+      <p-button label="Todos" [outlined]="activeFilter !== 'todos'" [rounded]="true" size="small" (onClick)="applyFilter('todos')"></p-button>
+      <p-button label="Mis Tickets" icon="pi pi-user" [outlined]="activeFilter !== 'mis_tickets'" [rounded]="true" size="small" severity="info" (onClick)="applyFilter('mis_tickets')"></p-button>
+      <p-button label="Sin Asignar" icon="pi pi-question-circle" [outlined]="activeFilter !== 'sin_asignar'" [rounded]="true" size="small" severity="secondary" (onClick)="applyFilter('sin_asignar')"></p-button>
+      <p-button label="Prioridad Alta" icon="pi pi-exclamation-circle" [outlined]="activeFilter !== 'prioridad_alta'" [rounded]="true" size="small" severity="danger" (onClick)="applyFilter('prioridad_alta')"></p-button>
+    </div>
+
+    <p-button *hasPermission="'add-ticket'" label="Nuevo Ticket" icon="pi pi-plus" (onClick)="openCreate()"></p-button>
+  </div>
+
+  <div *ngIf="currentView === 'kanban'" class="grid flex-nowrap overflow-x-auto h-full pb-3" style="min-height: 70vh;">
+    <div *ngFor="let status of statuses" class="col-12 md:col-3 min-w-min" style="min-width: 300px;">
+      <div class="surface-100 border-round p-3 h-full flex flex-column gap-3" pDroppable="tickets" (onDrop)="drop(status)">
+        
+        <div class="flex justify-content-between align-items-center">
+          <h3 class="m-0 text-700">{{ status }}</h3>
+          <span class="bg-primary text-white border-circle w-2rem h-2rem flex align-items-center justify-content-center text-sm">
+            {{ getTicketsByStatus(status).length }}
+          </span>
+        </div>
+
+        <div class="flex flex-column gap-2 flex-grow-1 min-h-10rem">
+          <div *ngFor="let t of getTicketsByStatus(status)" pDraggable="tickets" (onDragStart)="dragStart(t)" (onDragEnd)="dragEnd()" class="cursor-move">
+            <p-card styleClass="shadow-1 hover:shadow-3 transition-all transition-duration-200 cursor-pointer" (click)="openDetail(t)">
+              <div class="flex flex-column gap-2">
+                <span class="font-bold text-900 line-height-2">{{ t.title }}</span>
+                <div class="flex justify-content-between align-items-center mt-2">
+                  <span class="text-sm text-600">
+                    <i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}
+                  </span>
+                  <p-tag [value]="t.priority" [severity]="getPrioritySeverity(t.priority)"></p-tag>
+                </div>
+                <div class="text-xs text-500 mt-1 flex justify-content-between">
+                  <span><i class="pi pi-calendar mr-1"></i> {{ t.dueDate || 'Sin fecha' }}</span>
+                  <span><i class="pi pi-comments mr-1"></i>{{ t.comments.length }}</span>
+                </div>
+              </div>
+            </p-card>
+          </div>
+          
+          <div *ngIf="getTicketsByStatus(status).length === 0" class="border-2 border-dashed border-400 border-round h-5rem flex align-items-center justify-content-center text-500 font-italic">
+            Soltar aquí
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="currentView === 'table'" class="card shadow-1 border-round-xl">
+    <p-table [value]="filteredTickets" [rows]="10" [paginator]="true" responsiveLayout="scroll" [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="title">Título <p-sortIcon field="title"></p-sortIcon></th>
+          <th pSortableColumn="status">Estado <p-sortIcon field="status"></p-sortIcon></th>
+          <th pSortableColumn="assignee">Asignado a <p-sortIcon field="assignee"></p-sortIcon></th>
+          <th pSortableColumn="priority">Prioridad <p-sortIcon field="priority"></p-sortIcon></th>
+          <th pSortableColumn="dueDate">Fecha Límite <p-sortIcon field="dueDate"></p-sortIcon></th>
+          <th>Acción</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-t>
+        <tr class="cursor-pointer" (click)="openDetail(t)">
+          <td class="font-medium text-color-secondary">{{ t.id }}</td>
+          <td class="font-bold text-900">{{ t.title }}</td>
+          <td><p-tag [value]="t.status" [severity]="getStatusSeverity(t.status)"></p-tag></td>
+          <td>
+            <span class="text-600" [ngClass]="{'font-italic': !t.assignee}">
+              <i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}
+            </span>
+          </td>
+          <td><p-tag [value]="t.priority" [severity]="getPrioritySeverity(t.priority)"></p-tag></td>
+          <td><span class="text-500"><i class="pi pi-calendar mr-1"></i>{{ t.dueDate || 'N/A' }}</span></td>
+          <td>
+            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" (onClick)="openDetail(t); $event.stopPropagation()"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center p-4 text-500">No se encontraron tickets con los filtros actuales.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog header="Crear Nuevo Ticket" [(visible)]="displayCreateModal" [modal]="true" [style]="{ width: '450px' }">
+  <div class="flex flex-column gap-3 pt-3">
+    <div class="flex flex-column gap-1">
+      <label class="font-medium">Título <span class="text-red-500">*</span></label>
+      <input pInputText [(ngModel)]="draftTicket.title" placeholder="Ej. Actualizar dependencias" />
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium">Descripción</label>
+      <textarea pInputTextarea [(ngModel)]="draftTicket.description" rows="3"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6 flex flex-column gap-1">
+        <label class="font-medium">Estado inicial</label>
+        <p-dropdown [options]="statusOptions" [(ngModel)]="draftTicket.status" appendTo="body" styleClass="w-full"></p-dropdown>
+      </div>
+      <div class="col-6 flex flex-column gap-1">
+        <label class="font-medium">Prioridad</label>
+        <p-dropdown [options]="priorityOptions" [(ngModel)]="draftTicket.priority" appendTo="body" styleClass="w-full"></p-dropdown>
+      </div>
+    </div>
+    <div class="flex flex-column gap-1">
+      <label class="font-medium">Asignado a (Opcional)</label>
+      <div class="p-inputgroup">
+        <input pInputText [(ngModel)]="draftTicket.assignee" placeholder="Nombre del integrante" />
+        <p-button icon="pi pi-user" severity="secondary" pTooltip="Asignarme a mí" tooltipPosition="top" (onClick)="assignToMe()"></p-button>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="displayModal = false"></p-button>
+    <p-button *hasPermission="'edit-ticket'" label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Detalles del Ticket" [(visible)]="displayModal" [modal]="true" [style]="{ width: '750px' }">
+  <div class="grid pt-3" *ngIf="selectedTicket">
+    <div class="col-12 md:col-7 flex flex-column gap-3">
+      <div class="flex flex-column gap-1"><label class="font-medium">Título</label><input pInputText [(ngModel)]="selectedTicket.title" /></div>
+      <div class="flex flex-column gap-1"><label class="font-medium">Descripción</label><textarea pInputTextarea [(ngModel)]="selectedTicket.description" rows="4"></textarea></div>
+      <div class="grid">
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Creado por</label><input pInputText [(ngModel)]="selectedTicket.creator" /></div>
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Asignado a</label><input pInputText [(ngModel)]="selectedTicket.assignee" /></div>
+      </div>
+      <div class="grid">
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Estado</label><p-dropdown [options]="statusOptions" [(ngModel)]="selectedTicket.status" appendTo="body" styleClass="w-full"></p-dropdown></div>
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Prioridad</label><p-dropdown [options]="priorityOptions" [(ngModel)]="selectedTicket.priority" appendTo="body" styleClass="w-full"></p-dropdown></div>
+      </div>
+      <div class="grid">
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Fecha de creación</label><input type="date" pInputText [(ngModel)]="selectedTicket.creationDate" class="w-full" /></div>
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Fecha Límite</label><input type="date" pInputText [(ngModel)]="selectedTicket.dueDate" class="w-full"/></div>
+      </div>
+    </div>
+    <div class="col-12 md:col-5 flex flex-column gap-4 border-left-none md:border-left-1 surface-border pl-0 md:pl-4">
+      <div class="flex flex-column gap-2"><h4 class="m-0 border-bottom-1 surface-border pb-2">Comentarios</h4>
+        <div class="flex gap-2"><input pInputText [(ngModel)]="newCommentText" placeholder="Escribe algo..." class="w-full p-inputtext-sm" (keyup.enter)="addComment()"/><p-button icon="pi pi-send" (onClick)="addComment()" [disabled]="!newCommentText"></p-button></div>
+        <div class="flex flex-column gap-2 overflow-y-auto" style="max-height: 150px;"><div *ngIf="selectedTicket.comments.length === 0" class="text-500 text-sm font-italic">No hay comentarios aún.</div><div *ngFor="let c of selectedTicket.comments" class="surface-100 p-2 border-round text-sm"><div class="flex justify-content-between"><span class="font-bold">{{ c.user }}</span><span class="text-500 text-xs">{{ c.date }}</span></div><div class="mt-1">{{ c.text }}</div></div></div>
+      </div>
+      <div class="flex flex-column gap-2"><h4 class="m-0 border-bottom-1 surface-border pb-2">Historial de Cambios</h4>
+        <div class="flex flex-column gap-2 overflow-y-auto" style="max-height: 150px;"><div *ngFor="let h of selectedTicket.history" class="border-left-2 border-primary pl-2 py-1 text-sm"><div class="text-500 text-xs">{{ h.date }}</div><div>{{ h.action }}</div></div></div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="displayModal = false"></p-button>
+    <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()"></p-button>
+  </ng-template>
+</p-dialog>

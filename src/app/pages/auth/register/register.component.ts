@@ -50,8 +50,7 @@ export class RegisterComponent {
         address: ['', [Validators.required, Validators.minLength(5)]],
         phone: ['', [
           Validators.required,
-          Validators.pattern(/^\d+$/) // solo números
-          // si quieres exactamente 10 dígitos, usa: Validators.pattern(/^\d{10}$/)
+          Validators.pattern(/^\d+$/)
         ]],
         password: ['', [
           Validators.required,
@@ -68,7 +67,6 @@ export class RegisterComponent {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
-    // Aquí iría tu llamada a API. Si todo OK:
     this.router.navigate(['/auth/login']);
   }
 
