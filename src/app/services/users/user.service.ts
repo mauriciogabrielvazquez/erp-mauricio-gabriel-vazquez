@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class UserService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/users';
+  private apiUrl = 'https://apigateway-hjup.onrender.com/users';
 
   getUsers(): Observable<any> {
     return this.http.get<any>(this.apiUrl);

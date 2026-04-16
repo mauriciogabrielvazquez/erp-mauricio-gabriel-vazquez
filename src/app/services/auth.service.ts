@@ -7,7 +7,7 @@ import { Observable, tap } from 'rxjs';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/auth';
+  private apiUrl = 'https://apigateway-hjup.onrender.com/auth';
 
   private permisosGlobales = signal<string[]>([]);
   private permisosPorGrupo = signal<any>({});

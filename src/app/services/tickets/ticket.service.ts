@@ -7,7 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class TicketService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/tickets';
+  private baseApiUrl = 'https://apigateway-hjup.onrender.com';
+  private apiUrl = `${this.baseApiUrl}/tickets`;
 
   getTicketsByGroup(groupId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/group/${groupId}`);
@@ -26,10 +27,10 @@ export class TicketService {
   }
   
   getGroupMembers(groupId: string) {
-    return this.http.get<any>(`http://localhost:3000/groups/${groupId}/members`);
+    return this.http.get<any>(`${this.baseApiUrl}/groups/${groupId}/members`);
   }
 
   getTicketsByUser(userId: string) {
-    return this.http.get<any>(`http://localhost:3000/tickets/user/${userId}`);
+    return this.http.get<any>(`${this.apiUrl}/user/${userId}`);
   }
 }

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class GroupService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/groups'; 
+  private apiUrl = 'https://apigateway-hjup.onrender.com/groups'; 
 
   getGroups(): Observable<any> {
     return this.http.get<any>(this.apiUrl);
