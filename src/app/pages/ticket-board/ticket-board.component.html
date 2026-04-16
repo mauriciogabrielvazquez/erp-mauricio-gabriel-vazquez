@@ -1,14 +1,11 @@
 <div class="flex flex-column gap-4 h-full">
+  <p-toast position="top-right"></p-toast>
   
   <div class="flex flex-column md:flex-row justify-content-between align-items-center gap-3 bg-white p-3 border-round-xl shadow-1">
-    
     <div class="flex align-items-center gap-3">
       <h2 class="m-0 hidden md:block">Tickets</h2>
-      
       <p-selectButton [options]="viewOptions" [(ngModel)]="currentView" optionLabel="icon" optionValue="value">
-        <ng-template let-item pTemplate>
-          <i [class]="item.icon"></i>
-        </ng-template>
+        <ng-template let-item pTemplate><i [class]="item.icon"></i></ng-template>
       </p-selectButton>
     </div>
 
@@ -34,18 +31,23 @@
         </div>
 
         <div class="flex flex-column gap-2 flex-grow-1 min-h-10rem">
-          <div *ngFor="let t of getTicketsByStatus(status)" pDraggable="tickets" (onDragStart)="dragStart(t)" (onDragEnd)="dragEnd()" class="cursor-move">
+          <div *ngFor="let t of getTicketsByStatus(status)" 
+               [pDraggable]="canMoveTicket(t) ? 'tickets' : undefined"
+               (onDragStart)="dragStart(t)" 
+               (onDragEnd)="dragEnd()" 
+               [ngClass]="{'cursor-move': canMoveTicket(t), 'cursor-not-allowed opacity-60': !canMoveTicket(t)}"
+               [pTooltip]="!canMoveTicket(t) ? 'No estás asignado o no tienes permisos para moverlo' : ''"
+               tooltipPosition="top">
+            
             <p-card styleClass="shadow-1 hover:shadow-3 transition-all transition-duration-200 cursor-pointer" (click)="openDetail(t)">
               <div class="flex flex-column gap-2">
                 <span class="font-bold text-900 line-height-2">{{ t.title }}</span>
                 <div class="flex justify-content-between align-items-center mt-2">
-                  <span class="text-sm text-600">
-                    <i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}
-                  </span>
+                  <span class="text-sm text-600"><i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}</span>
                   <p-tag [value]="t.priority" [severity]="getPrioritySeverity(t.priority)"></p-tag>
                 </div>
                 <div class="text-xs text-500 mt-1 flex justify-content-between">
-                  <span><i class="pi pi-calendar mr-1"></i> {{ t.dueDate || 'Sin fecha' }}</span>
+                  <span [ngClass]="{'text-red-500 font-bold': !t.dueDate}"><i class="pi pi-calendar mr-1"></i> {{ t.dueDate || 'Sin fecha' }}</span>
                   <span><i class="pi pi-comments mr-1"></i>{{ t.comments.length }}</span>
                 </div>
               </div>
@@ -79,22 +81,14 @@
           <td class="font-medium text-color-secondary">{{ t.id }}</td>
           <td class="font-bold text-900">{{ t.title }}</td>
           <td><p-tag [value]="t.status" [severity]="getStatusSeverity(t.status)"></p-tag></td>
-          <td>
-            <span class="text-600" [ngClass]="{'font-italic': !t.assignee}">
-              <i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}
-            </span>
-          </td>
+          <td><span class="text-600" [ngClass]="{'font-italic': !t.assignee}"><i class="pi pi-user mr-1"></i>{{ t.assignee || 'Sin asignar' }}</span></td>
           <td><p-tag [value]="t.priority" [severity]="getPrioritySeverity(t.priority)"></p-tag></td>
-          <td><span class="text-500"><i class="pi pi-calendar mr-1"></i>{{ t.dueDate || 'N/A' }}</span></td>
-          <td>
-            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" (onClick)="openDetail(t); $event.stopPropagation()"></p-button>
-          </td>
+          <td><span class="text-500" [ngClass]="{'text-red-500': !t.dueDate}"><i class="pi pi-calendar mr-1"></i>{{ t.dueDate || 'N/A' }}</span></td>
+          <td><p-button icon="pi pi-eye" [rounded]="true" [text]="true" (onClick)="openDetail(t); $event.stopPropagation()"></p-button></td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7" class="text-center p-4 text-500">No se encontraron tickets con los filtros actuales.</td>
-        </tr>
+        <tr><td colspan="7" class="text-center p-4 text-500">No se encontraron tickets con los filtros actuales.</td></tr>
       </ng-template>
     </p-table>
   </div>
@@ -120,19 +114,15 @@
         <p-dropdown [options]="priorityOptions" [(ngModel)]="draftTicket.priority" appendTo="body" styleClass="w-full"></p-dropdown>
       </div>
     </div>
-    <div class="flex flex-column gap-1">
-      <label class="font-medium">Asignado a (Opcional)</label>
-      <p-dropdown 
-        [options]="memberOptions" 
-        [(ngModel)]="draftTicket.assigneeId" 
-        optionLabel="label" 
-        optionValue="value" 
-        [filter]="true" 
-        filterBy="label" 
-        placeholder="Selecciona un integrante" 
-        appendTo="body" 
-        styleClass="w-full">
-      </p-dropdown>
+    <div class="grid">
+      <div class="col-6 flex flex-column gap-1">
+        <label class="font-medium">Fecha Límite <span class="text-red-500">*</span></label>
+        <input type="date" pInputText [(ngModel)]="draftTicket.dueDate" class="w-full"/>
+      </div>
+      <div class="col-6 flex flex-column gap-1">
+        <label class="font-medium">Asignado a</label>
+        <p-dropdown [options]="memberOptions" [(ngModel)]="draftTicket.assigneeId" optionLabel="label" optionValue="value" [filter]="true" filterBy="label" placeholder="Integrante" appendTo="body" styleClass="w-full"></p-dropdown>
+      </div>
     </div>
   </div>
   <ng-template pTemplate="footer">
@@ -150,17 +140,7 @@
         <div class="col-6 flex flex-column gap-1"><label class="font-medium">Creado por</label><input pInputText [(ngModel)]="selectedTicket.creator" [disabled]="true" /></div>
         <div class="col-6 flex flex-column gap-1">
           <label class="font-medium">Asignado a</label>
-          <p-dropdown 
-            [options]="memberOptions" 
-            [(ngModel)]="selectedTicket.assigneeId" 
-            optionLabel="label" 
-            optionValue="value" 
-            [filter]="true" 
-            filterBy="label" 
-            placeholder="Selecciona un integrante" 
-            appendTo="body" 
-            styleClass="w-full">
-          </p-dropdown>
+          <p-dropdown [options]="memberOptions" [(ngModel)]="selectedTicket.assigneeId" optionLabel="label" optionValue="value" [filter]="true" filterBy="label" placeholder="Selecciona un integrante" appendTo="body" styleClass="w-full"></p-dropdown>
         </div>
       </div>
       <div class="grid">

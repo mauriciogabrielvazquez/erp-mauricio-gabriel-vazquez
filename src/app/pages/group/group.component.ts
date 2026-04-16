@@ -85,8 +85,8 @@ export class GroupComponent implements OnInit {
           category: g.categoria || 'General',
           level: g.nivel || 'Básico',
           author: g.profesor || 'Sin asignar',
-          members: '0',
-          tickets: '0',
+          members: g.miembros_count ? g.miembros_count.toString() : '0',
+          tickets: g.tickets_count ? g.tickets_count.toString() : '0',
           imageUrl: g.imagen_url || 'https://picsum.photos/seed/defaultgroup/800/400',
           memberList: []
         }));

@@ -50,7 +50,7 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: (response) => {
         console.log('¡Login exitoso! Pase VIP recibido.', response);
-        this.router.navigate(['/home/group']);
+        this.router.navigate(['/home/dashboard']);
       },
       error: (err) => {
         console.error('Error de autenticación:', err);

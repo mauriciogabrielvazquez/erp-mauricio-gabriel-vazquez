@@ -29,8 +29,8 @@ interface HistoryItem { action: string; date: string; }
 interface Ticket {
   id: string; title: string; description: string;
   status: TicketStatus; creator: string; assignee: string;
-  assigneeId: string | null;
-  priority: Priority; creationDate: string; dueDate: string;
+  assigneeId: string | null; priority: Priority; 
+  creationDate: string; dueDate: string;
   comments: CommentItem[]; history: HistoryItem[];
 }
 
@@ -74,6 +74,8 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
   originalTicketCopy: Ticket | null = null;
   newCommentText = '';
   displayCreateModal = false;
+  
+  // UX: Agregado dueDate al borrador inicial
   draftTicket: Partial<Ticket> = {};
   memberOptions: any[] = [];
 
@@ -81,7 +83,7 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
     private ticketService: TicketService,
     private route: ActivatedRoute,
     private messageService: MessageService,
-    private authService: AuthService
+    public authService: AuthService // Cambiado a public para usarlo en el HTML
   ) {}
 
   ngOnInit() {
@@ -116,9 +118,7 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
     this.ticketService.getTicketsByGroup(this.currentGroupId).subscribe({
       next: (res) => {
         this.tickets = res.data.map((t: any) => ({
-          id: t.id,
-          title: t.titulo,
-          description: t.descripcion || '',
+          id: t.id, title: t.titulo, description: t.descripcion || '',
           status: t.estado as TicketStatus,
           creator: t.autor?.nombre_completo || 'Desconocido',
           assignee: t.asignado?.nombre_completo || '',
@@ -157,29 +157,22 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
     return this.filteredTickets.filter(t => t.status === status);
   }
 
-  dragStart(ticket: Ticket) { this.draggedTicket = ticket; }
+  // UX: Función para determinar si el usuario actual puede mover el ticket
+  canMoveTicket(ticket: Ticket): boolean {
+    return ticket.assigneeId === this.currentUserId && this.authService.hasPermission('edit-ticket');
+  }
+
+  dragStart(ticket: Ticket) { 
+    if (this.canMoveTicket(ticket)) {
+      this.draggedTicket = ticket; 
+    }
+  }
 
   drop(newStatus: TicketStatus) {
-    /*if (!this.draggedTicket || this.draggedTicket.status === newStatus) {
-      this.draggedTicket = null;
-      return;
-    }*/
-
     if (!this.draggedTicket || this.draggedTicket.status === newStatus) return;
 
-    // 🔥 REGLA DE NEGOCIO: Bloqueo de arrastre si no eres el asignado
     if (this.draggedTicket.assigneeId !== this.currentUserId) {
-       // ... código del toast de error ...
-       return; 
-    }
-
-    if (this.draggedTicket.assigneeId !== this.currentUserId) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Acceso Denegado',
-        detail: 'Solo el usuario asignado puede mover este ticket.',
-        life: 4000
-      });
+      this.messageService.add({ severity: 'error', summary: 'Acceso Denegado', detail: 'Solo el usuario asignado puede mover este ticket.', life: 4000 });
       this.draggedTicket = null;
       return;
     }
@@ -187,21 +180,18 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
     const historyItem = { action: `Movió a "${newStatus}"`, date: new Date().toLocaleString() };
     const newHistory = [historyItem, ...this.draggedTicket.history];
     const payload = { estado: newStatus, historial: newHistory };
-
+    
     this.ticketService.updateTicket(this.draggedTicket.id, payload).subscribe({
       next: () => {
         this.loadTickets();
         this.draggedTicket = null;
+        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: `Ticket movido a ${newStatus}` });
       },
       error: (err) => {
         console.error('Error actualizando estado', err);
         this.draggedTicket = null;
         if (err.status === 403) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Permisos',
-            detail: 'No tienes autorización para realizar este cambio.'
-          });
+          this.messageService.add({ severity: 'error', summary: 'Error de Permisos', detail: 'No tienes autorización para realizar este cambio.' });
         }
       }
     });
@@ -210,36 +200,37 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
   dragEnd() { this.draggedTicket = null; }
 
   openCreate() {
-    this.draftTicket = { title: '', description: '', status: 'Pendiente', assigneeId: null, priority: 'Media' };
+    this.draftTicket = { title: '', description: '', status: 'Pendiente', assigneeId: null, priority: 'Media', dueDate: '' };
     this.displayCreateModal = true;
   }
 
   assignToMe() {
-    if (this.displayCreateModal) {
-      this.draftTicket.assigneeId = this.currentUserId;
-    }
-    if (this.displayModal && this.selectedTicket) {
-      this.selectedTicket.assigneeId = this.currentUserId;
-    }
+    if (this.displayCreateModal) { this.draftTicket.assigneeId = this.currentUserId; }
+    if (this.displayModal && this.selectedTicket) { this.selectedTicket.assigneeId = this.currentUserId; }
   }
 
   createTicket() {
-    if (!this.draftTicket.title?.trim()) return;
-
+    if (!this.draftTicket.title?.trim() || !this.draftTicket.dueDate) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'El título y la fecha límite son obligatorios.' });
+      return;
+    }
+    
     const payload = {
       titulo: this.draftTicket.title,
       descripcion: this.draftTicket.description,
       estado: this.draftTicket.status,
       prioridad: this.draftTicket.priority,
       grupo_id: this.currentGroupId,
+      fecha_final: this.draftTicket.dueDate,
       asignado_id: this.draftTicket.assigneeId ?? null,
       historial: [{ action: 'Ticket creado', date: new Date().toLocaleString() }]
     };
-
+    
     this.ticketService.createTicket(payload).subscribe({
       next: () => {
         this.displayCreateModal = false;
         this.loadTickets();
+        this.messageService.add({ severity: 'success', summary: '¡Creado!', detail: 'El ticket se creó correctamente.' });
       },
       error: (err) => console.error('Error creando ticket', err)
     });
@@ -279,15 +270,12 @@ export class TicketBoardComponent implements OnInit, OnDestroy {
         next: () => {
           this.displayModal = false;
           this.loadTickets();
+          this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Los cambios se aplicaron con éxito.' });
         },
         error: (err) => {
           console.error('Error guardando cambios', err);
           if (err.status === 403) {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No tienes permisos para modificar el estado de este ticket.'
-            });
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para modificar este ticket.' });
           }
         }
       });
