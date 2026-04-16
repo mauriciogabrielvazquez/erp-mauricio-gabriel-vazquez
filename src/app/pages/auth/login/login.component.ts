@@ -5,8 +5,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
-import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
+import { AuthService } from '../../../services/auth.service';
+import { Password } from 'primeng/password';
 
 @Component({
   selector: 'app-login',
@@ -17,18 +18,21 @@ import { ButtonModule } from 'primeng/button';
     ReactiveFormsModule,
     CardModule,
     InputTextModule,
-    PasswordModule,
-    ButtonModule
+    ButtonModule,
+    Password
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   error = '';
-
   form;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder, 
+    private router: Router,
+    private authService: AuthService
+  ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
@@ -43,11 +47,16 @@ export class LoginComponent {
     const email = (this.form.value.email ?? '').trim();
     const password = String(this.form.value.password ?? '');
 
-    if (email === 'mauricio@gmail.com' && password === '1234') {
-      this.router.navigate(['/home/group']);
-    } else {
-      this.error = 'Correo o contraseña incorrectos.';
-    }
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        console.log('¡Login exitoso! Pase VIP recibido.', response);
+        this.router.navigate(['/home/group']);
+      },
+      error: (err) => {
+        console.error('Error de autenticación:', err);
+        this.error = err.error?.data?.message || 'Correo o contraseña incorrectos.';
+      }
+    });
   }
 
   get f() { return this.form.controls; }

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ToolbarModule } from 'primeng/toolbar';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 
 @Component({
@@ -9,8 +9,6 @@ import { CardModule } from 'primeng/card';
     templateUrl: './landing-page.component.html',
     styleUrl: './landing-page.component.css',
     standalone: true,
-    imports: [ButtonModule, RouterModule, ToolbarModule, CardModule]
+    imports: [CommonModule, RouterModule, ButtonModule, CardModule]
 })
-export class LandingPageComponent {
-    date: Date | undefined;
-}
+export class LandingPageComponent { }

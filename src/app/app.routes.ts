@@ -41,7 +41,7 @@ export const routes: Routes = [
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
-        path: 'groups-tickets',
+        path: 'groups-tickets/:id',
         loadComponent: () =>
           import('./pages/ticket-board/ticket-board.component').then(m => m.TicketBoardComponent),
       },

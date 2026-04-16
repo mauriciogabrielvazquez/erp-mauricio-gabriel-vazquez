@@ -122,15 +122,22 @@
     </div>
     <div class="flex flex-column gap-1">
       <label class="font-medium">Asignado a (Opcional)</label>
-      <div class="p-inputgroup">
-        <input pInputText [(ngModel)]="draftTicket.assignee" placeholder="Nombre del integrante" />
-        <p-button icon="pi pi-user" severity="secondary" pTooltip="Asignarme a mí" tooltipPosition="top" (onClick)="assignToMe()"></p-button>
-      </div>
+      <p-dropdown 
+        [options]="memberOptions" 
+        [(ngModel)]="draftTicket.assigneeId" 
+        optionLabel="label" 
+        optionValue="value" 
+        [filter]="true" 
+        filterBy="label" 
+        placeholder="Selecciona un integrante" 
+        appendTo="body" 
+        styleClass="w-full">
+      </p-dropdown>
     </div>
   </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="displayModal = false"></p-button>
-    <p-button *hasPermission="'edit-ticket'" label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()"></p-button>
+    <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="displayCreateModal = false"></p-button>
+    <p-button *hasPermission="'add-ticket'" label="Crear Ticket" icon="pi pi-check" (onClick)="createTicket()"></p-button>
   </ng-template>
 </p-dialog>
 
@@ -140,15 +147,28 @@
       <div class="flex flex-column gap-1"><label class="font-medium">Título</label><input pInputText [(ngModel)]="selectedTicket.title" /></div>
       <div class="flex flex-column gap-1"><label class="font-medium">Descripción</label><textarea pInputTextarea [(ngModel)]="selectedTicket.description" rows="4"></textarea></div>
       <div class="grid">
-        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Creado por</label><input pInputText [(ngModel)]="selectedTicket.creator" /></div>
-        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Asignado a</label><input pInputText [(ngModel)]="selectedTicket.assignee" /></div>
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Creado por</label><input pInputText [(ngModel)]="selectedTicket.creator" [disabled]="true" /></div>
+        <div class="col-6 flex flex-column gap-1">
+          <label class="font-medium">Asignado a</label>
+          <p-dropdown 
+            [options]="memberOptions" 
+            [(ngModel)]="selectedTicket.assigneeId" 
+            optionLabel="label" 
+            optionValue="value" 
+            [filter]="true" 
+            filterBy="label" 
+            placeholder="Selecciona un integrante" 
+            appendTo="body" 
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
       </div>
       <div class="grid">
         <div class="col-6 flex flex-column gap-1"><label class="font-medium">Estado</label><p-dropdown [options]="statusOptions" [(ngModel)]="selectedTicket.status" appendTo="body" styleClass="w-full"></p-dropdown></div>
         <div class="col-6 flex flex-column gap-1"><label class="font-medium">Prioridad</label><p-dropdown [options]="priorityOptions" [(ngModel)]="selectedTicket.priority" appendTo="body" styleClass="w-full"></p-dropdown></div>
       </div>
       <div class="grid">
-        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Fecha de creación</label><input type="date" pInputText [(ngModel)]="selectedTicket.creationDate" class="w-full" /></div>
+        <div class="col-6 flex flex-column gap-1"><label class="font-medium">Fecha de creación</label><input type="date" pInputText [(ngModel)]="selectedTicket.creationDate" class="w-full" [disabled]="true" /></div>
         <div class="col-6 flex flex-column gap-1"><label class="font-medium">Fecha Límite</label><input type="date" pInputText [(ngModel)]="selectedTicket.dueDate" class="w-full"/></div>
       </div>
     </div>
@@ -164,6 +184,6 @@
   </div>
   <ng-template pTemplate="footer">
     <p-button label="Cerrar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="displayModal = false"></p-button>
-    <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()"></p-button>
+    <p-button *hasPermission="'edit-ticket'" label="Guardar Cambios" icon="pi pi-check" (onClick)="saveTicket()"></p-button>
   </ng-template>
 </p-dialog>

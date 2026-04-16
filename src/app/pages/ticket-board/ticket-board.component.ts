@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -10,8 +10,15 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableModule } from 'primeng/table';         // <-- Para la vista de tabla
-import { SelectButtonModule } from 'primeng/selectbutton'; // <-- Para el toggle
+import { TableModule } from 'primeng/table';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { ToastModule } from 'primeng/toast';
+import { ActivatedRoute } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { Subscription } from 'rxjs';
+import { HasPermissionDirective } from '../../directives/has-permission.directive';
+import { TicketService } from '../../services/tickets/ticket.service';
+import { AuthService } from '../../services/auth.service';
 
 type TicketStatus = 'Pendiente' | 'En Progreso' | 'Revisión' | 'Hecho';
 type Priority = 'Urgente' | 'Alta' | 'Media' | 'Baja';
@@ -22,6 +29,7 @@ interface HistoryItem { action: string; date: string; }
 interface Ticket {
   id: string; title: string; description: string;
   status: TicketStatus; creator: string; assignee: string;
+  assigneeId: string | null;
   priority: Priority; creationDate: string; dueDate: string;
   comments: CommentItem[]; history: HistoryItem[];
 }
@@ -32,31 +40,34 @@ interface Ticket {
   imports: [
     CommonModule, FormsModule, CardModule, DragDropModule, TagModule,
     DialogModule, ButtonModule, InputTextModule, DropdownModule,
-    InputTextarea, TooltipModule, TableModule, SelectButtonModule
+    InputTextarea, TooltipModule, TableModule, SelectButtonModule,
+    ToastModule, HasPermissionDirective
   ],
+  providers: [MessageService],
   templateUrl: './ticket-board.component.html',
   styleUrl: './ticket-board.component.css'
 })
-export class TicketBoardComponent implements OnInit {
-  currentUser = 'Luis Abraham';
+export class TicketBoardComponent implements OnInit, OnDestroy {
+  currentUser = localStorage.getItem('username') || 'Usuario';
+  currentUserId = localStorage.getItem('userId') || '';
+  currentGroupId: string = '';
 
-  // --- Toggle de Vistas ---
+  private routeSub?: Subscription;
+
   viewOptions: any[] = [
-    { icon: 'pi pi-objects-column', value: 'kanban', justify: 'Center' },
+    { icon: 'pi pi-table', value: 'kanban', justify: 'Center' },
     { icon: 'pi pi-list', value: 'table', justify: 'Center' }
   ];
   currentView: string = 'kanban';
 
-  // --- Datos y Filtros ---
   tickets: Ticket[] = [];
-  filteredTickets: Ticket[] = []; // La lista que realmente se dibuja en pantalla
+  filteredTickets: Ticket[] = [];
   activeFilter: string = 'todos';
 
   statuses: TicketStatus[] = ['Pendiente', 'En Progreso', 'Revisión', 'Hecho'];
   priorityOptions = ['Urgente', 'Alta', 'Media', 'Baja'];
   statusOptions = ['Pendiente', 'En Progreso', 'Revisión', 'Hecho'];
 
-  // --- Variables Drag&Drop y Modales ---
   draggedTicket: Ticket | null = null;
   displayModal = false;
   selectedTicket: Ticket | null = null;
@@ -64,27 +75,74 @@ export class TicketBoardComponent implements OnInit {
   newCommentText = '';
   displayCreateModal = false;
   draftTicket: Partial<Ticket> = {};
+  memberOptions: any[] = [];
+
+  constructor(
+    private ticketService: TicketService,
+    private route: ActivatedRoute,
+    private messageService: MessageService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.tickets = [
-      { id: 'T-1', title: 'Diseñar UI del respirador', description: 'Crear vistas', status: 'En Progreso', creator: 'Luis Abraham', assignee: 'Josué Arreola', priority: 'Alta', creationDate: '2026-03-01', dueDate: '2026-03-15', comments: [], history: [] },
-      { id: 'T-2', title: 'Script de base de datos', description: 'Estructurar tablas', status: 'Revisión', creator: 'Prof. Rivera', assignee: 'Luis Abraham', priority: 'Media', creationDate: '2026-03-05', dueDate: '2026-03-18', comments: [], history: [] },
-      { id: 'T-3', title: 'Diagrama C4 en Structurizr', description: 'Actualizar', status: 'Pendiente', creator: 'Santiago Alberto', assignee: 'Bruno Lopez', priority: 'Urgente', creationDate: '2026-03-08', dueDate: '2026-03-20', comments: [], history: [] },
-      { id: 'T-4', title: 'Documentar requerimientos', description: 'Hacer el PDF', status: 'Pendiente', creator: 'Luis Abraham', assignee: '', priority: 'Baja', creationDate: '2026-03-12', dueDate: '2026-03-25', comments: [], history: [] } // Ticket sin asignar para probar el filtro
-    ];
-    this.applyFilter('todos'); // Inicializar la lista filtrada
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      this.currentGroupId = params.get('id') || '';
+      if (this.currentGroupId) {
+        this.authService.setCurrentGroup(this.currentGroupId);
+        this.loadGroupMembers();
+        this.loadTickets();
+      }
+    });
   }
 
-  // --- LÓGICA DE FILTROS RÁPIDOS ---
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
+  }
+
+  loadGroupMembers() {
+    this.ticketService.getGroupMembers(this.currentGroupId).subscribe({
+      next: (res) => {
+        this.memberOptions = res.data.map((m: any) => ({
+          label: m.nombre_completo,
+          value: m.id
+        }));
+        this.memberOptions.unshift({ label: 'Sin asignar', value: null });
+      },
+      error: (err) => console.error('Error cargando miembros:', err)
+    });
+  }
+
+  loadTickets() {
+    this.ticketService.getTicketsByGroup(this.currentGroupId).subscribe({
+      next: (res) => {
+        this.tickets = res.data.map((t: any) => ({
+          id: t.id,
+          title: t.titulo,
+          description: t.descripcion || '',
+          status: t.estado as TicketStatus,
+          creator: t.autor?.nombre_completo || 'Desconocido',
+          assignee: t.asignado?.nombre_completo || '',
+          assigneeId: t.asignado?.id || null,
+          priority: t.prioridad as Priority,
+          creationDate: new Date(t.creado_en).toISOString().split('T')[0],
+          dueDate: t.fecha_final ? new Date(t.fecha_final).toISOString().split('T')[0] : '',
+          comments: Array.isArray(t.comentarios) ? t.comentarios : [],
+          history: Array.isArray(t.historial) ? t.historial : []
+        }));
+        this.applyFilter(this.activeFilter);
+      },
+      error: (err) => console.error('Error cargando tickets:', err)
+    });
+  }
+
   applyFilter(filterType: string) {
     this.activeFilter = filterType;
-    
     switch(filterType) {
       case 'mis_tickets':
-        this.filteredTickets = this.tickets.filter(t => t.assignee === this.currentUser);
+        this.filteredTickets = this.tickets.filter(t => t.assigneeId === this.currentUserId);
         break;
       case 'sin_asignar':
-        this.filteredTickets = this.tickets.filter(t => !t.assignee || t.assignee.trim() === '');
+        this.filteredTickets = this.tickets.filter(t => !t.assigneeId);
         break;
       case 'prioridad_alta':
         this.filteredTickets = this.tickets.filter(t => t.priority === 'Alta' || t.priority === 'Urgente');
@@ -95,52 +153,100 @@ export class TicketBoardComponent implements OnInit {
     }
   }
 
-  // Ahora el Kanban lee de la lista filtrada, no de la original
   getTicketsByStatus(status: TicketStatus): Ticket[] {
     return this.filteredTickets.filter(t => t.status === status);
   }
 
-  // --- Drag & Drop ---
   dragStart(ticket: Ticket) { this.draggedTicket = ticket; }
 
   drop(newStatus: TicketStatus) {
-    if (this.draggedTicket && this.draggedTicket.status !== newStatus) {
-      this.draggedTicket.history.unshift({ action: `Movió a "${newStatus}"`, date: new Date().toLocaleString() });
-      this.draggedTicket.status = newStatus;
+    /*if (!this.draggedTicket || this.draggedTicket.status === newStatus) {
       this.draggedTicket = null;
-      this.applyFilter(this.activeFilter); // Refrescar filtros por si acaso
+      return;
+    }*/
+
+    if (!this.draggedTicket || this.draggedTicket.status === newStatus) return;
+
+    // 🔥 REGLA DE NEGOCIO: Bloqueo de arrastre si no eres el asignado
+    if (this.draggedTicket.assigneeId !== this.currentUserId) {
+       // ... código del toast de error ...
+       return; 
     }
+
+    if (this.draggedTicket.assigneeId !== this.currentUserId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Acceso Denegado',
+        detail: 'Solo el usuario asignado puede mover este ticket.',
+        life: 4000
+      });
+      this.draggedTicket = null;
+      return;
+    }
+
+    const historyItem = { action: `Movió a "${newStatus}"`, date: new Date().toLocaleString() };
+    const newHistory = [historyItem, ...this.draggedTicket.history];
+    const payload = { estado: newStatus, historial: newHistory };
+
+    this.ticketService.updateTicket(this.draggedTicket.id, payload).subscribe({
+      next: () => {
+        this.loadTickets();
+        this.draggedTicket = null;
+      },
+      error: (err) => {
+        console.error('Error actualizando estado', err);
+        this.draggedTicket = null;
+        if (err.status === 403) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Permisos',
+            detail: 'No tienes autorización para realizar este cambio.'
+          });
+        }
+      }
+    });
   }
 
   dragEnd() { this.draggedTicket = null; }
 
-  // --- Modales (Crear, Editar, Comentar) ---
   openCreate() {
-    this.draftTicket = { title: '', description: '', status: 'Pendiente', assignee: '', priority: 'Media' };
+    this.draftTicket = { title: '', description: '', status: 'Pendiente', assigneeId: null, priority: 'Media' };
     this.displayCreateModal = true;
   }
 
-  assignToMe() { this.draftTicket.assignee = this.currentUser; }
+  assignToMe() {
+    if (this.displayCreateModal) {
+      this.draftTicket.assigneeId = this.currentUserId;
+    }
+    if (this.displayModal && this.selectedTicket) {
+      this.selectedTicket.assigneeId = this.currentUserId;
+    }
+  }
 
   createTicket() {
     if (!this.draftTicket.title?.trim()) return;
-    const newId = 'T-' + (this.tickets.length + 1);
-    const today = new Date().toISOString().split('T')[0];
 
-    const newTicket: Ticket = {
-      id: newId, title: this.draftTicket.title, description: this.draftTicket.description || '',
-      status: this.draftTicket.status as TicketStatus, creator: this.currentUser, assignee: this.draftTicket.assignee || '',
-      priority: this.draftTicket.priority as Priority, creationDate: today, dueDate: '',
-      comments: [], history: [{ action: 'Ticket creado', date: new Date().toLocaleString() }]
+    const payload = {
+      titulo: this.draftTicket.title,
+      descripcion: this.draftTicket.description,
+      estado: this.draftTicket.status,
+      prioridad: this.draftTicket.priority,
+      grupo_id: this.currentGroupId,
+      asignado_id: this.draftTicket.assigneeId ?? null,
+      historial: [{ action: 'Ticket creado', date: new Date().toLocaleString() }]
     };
 
-    this.tickets.push(newTicket);
-    this.applyFilter(this.activeFilter); // Actualizar vista
-    this.displayCreateModal = false;
+    this.ticketService.createTicket(payload).subscribe({
+      next: () => {
+        this.displayCreateModal = false;
+        this.loadTickets();
+      },
+      error: (err) => console.error('Error creando ticket', err)
+    });
   }
 
   openDetail(ticket: Ticket) {
-    this.selectedTicket = JSON.parse(JSON.stringify(ticket)); 
+    this.selectedTicket = JSON.parse(JSON.stringify(ticket));
     this.originalTicketCopy = JSON.parse(JSON.stringify(ticket));
     this.newCommentText = '';
     this.displayModal = true;
@@ -148,19 +254,43 @@ export class TicketBoardComponent implements OnInit {
 
   addComment() {
     if (this.newCommentText.trim() && this.selectedTicket) {
-      this.selectedTicket.comments.unshift({ user: this.currentUser, text: this.newCommentText.trim(), date: new Date().toLocaleString() });
+      this.selectedTicket.comments.unshift({
+        user: this.currentUser,
+        text: this.newCommentText.trim(),
+        date: new Date().toLocaleString()
+      });
       this.newCommentText = '';
     }
   }
 
   saveTicket() {
     if (this.selectedTicket && this.originalTicketCopy) {
-      const index = this.tickets.findIndex(t => t.id === this.selectedTicket!.id);
-      if (index !== -1) {
-        this.tickets[index] = { ...this.selectedTicket };
-      }
-      this.applyFilter(this.activeFilter); // Refrescar listas
-      this.displayModal = false;
+      const payload = {
+        titulo: this.selectedTicket.title,
+        descripcion: this.selectedTicket.description,
+        estado: this.selectedTicket.status,
+        prioridad: this.selectedTicket.priority,
+        fecha_final: this.selectedTicket.dueDate || null,
+        comentarios: this.selectedTicket.comments,
+        asignado_id: this.selectedTicket.assigneeId ?? null
+      };
+
+      this.ticketService.updateTicket(this.selectedTicket.id, payload).subscribe({
+        next: () => {
+          this.displayModal = false;
+          this.loadTickets();
+        },
+        error: (err) => {
+          console.error('Error guardando cambios', err);
+          if (err.status === 403) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No tienes permisos para modificar el estado de este ticket.'
+            });
+          }
+        }
+      });
     }
   }
 

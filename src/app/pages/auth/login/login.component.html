@@ -1,14 +1,13 @@
 <div class="min-h-screen flex align-items-center justify-content-center p-3 surface-ground">
   <p-card styleClass="w-full sm:w-30rem shadow-4 border-round-xl">
-    <ng-template pTemplate="header">
-      <div class="text-center pt-5 px-4">
-        <i class="pi pi-lock text-primary text-5xl mb-3"></i>
-        <h2 class="m-0 text-900">¡Hola de nuevo!</h2>
-        <p class="mt-2 mb-0 text-600">Ingresa tus datos para acceder a tu cuenta.</p>
-      </div>
-    </ng-template>
+    
+    <div class="text-center pt-5 px-4 mb-4">
+      <i class="pi pi-lock text-primary text-5xl mb-3"></i>
+      <h2 class="m-0 text-900">¡Hola de nuevo!</h2>
+      <p class="mt-2 mb-0 text-600">Ingresa tus datos para acceder a tu cuenta.</p>
+    </div>
 
-    <form [formGroup]="form" class="flex flex-column gap-4 mt-2">
+    <form [formGroup]="form" class="flex flex-column gap-4">
       
       <div class="flex flex-column gap-2">
         <label for="email" class="font-semibold text-700">Correo electrónico</label>
@@ -23,33 +22,24 @@
             formControlName="email"
           />
         </span>
-        <small class="text-red-500 font-medium" *ngIf="f.email.touched && f.email.errors?.['required']">
-          <i class="pi pi-info-circle mr-1"></i>Por favor, escribe tu correo para entrar.
-        </small>
-        <small class="text-red-500 font-medium" *ngIf="f.email.touched && f.email.errors?.['email']">
-          <i class="pi pi-exclamation-circle mr-1"></i>Esa no parece una dirección de correo correcta.
-        </small>
       </div>
 
       <div class="flex flex-column gap-2">
         <label for="password" class="font-semibold text-700">Contraseña</label>
         <p-password
-          inputId="password"
-          [toggleMask]="true"
-          [feedback]="false"
-          placeholder="Tu contraseña secreta"
-          styleClass="w-full"
-          inputStyleClass="w-full p-inputtext-lg"
-          formControlName="password"
-        ></p-password>
-        <small class="text-red-500 font-medium" *ngIf="f.password.touched && f.password.errors?.['required']">
-          <i class="pi pi-lock mr-1"></i>Necesitas escribir tu contraseña para ingresar.
-        </small>
+  inputId="password"
+  [toggleMask]="true"
+  [feedback]="false"
+  placeholder="Tu contraseña secreta"
+  formControlName="password"
+  [styleClass]="'w-full'" 
+  [inputStyleClass]="'w-full p-inputtext-lg'"
+></p-password>
       </div>
 
       <div *ngIf="error" class="p-3 bg-red-50 border-round-lg flex align-items-center gap-3 text-red-600 border-1 border-red-100">
         <i class="pi pi-times-circle text-xl"></i>
-        <span class="text-sm font-medium">Los datos no coinciden, revisa tu correo o contraseña.</span>
+        <span class="text-sm font-medium">{{ error }}</span>
       </div>
 
       <div class="mt-2 flex flex-column gap-3">

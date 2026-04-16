@@ -1,29 +1,29 @@
-import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { AuthService, Permission } from '../services/auth.service';
+import { Directive, Input, TemplateRef, ViewContainerRef, effect, inject, signal } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 @Directive({
   selector: '[hasPermission]',
   standalone: true
 })
 export class HasPermissionDirective {
-  private currentPermission: Permission | undefined;
+  private templateRef = inject(TemplateRef<any>);
+  private viewContainer = inject(ViewContainerRef);
+  private authService = inject(AuthService);
 
-  constructor(
-    private templateRef: TemplateRef<any>,
-    private viewContainer: ViewContainerRef,
-    private authService: AuthService
-  ) {}
+  private permissionSignal = signal<string>('');
 
-  @Input() set hasPermission(permission: Permission) {
-    this.currentPermission = permission;
-    this.updateView();
+  constructor() {
+    effect(() => {
+      const perm = this.permissionSignal();
+      this.viewContainer.clear();
+
+      if (perm && this.authService.hasPermission(perm)) {
+        this.viewContainer.createEmbeddedView(this.templateRef);
+      }
+    });
   }
 
-  private updateView() {
-    this.viewContainer.clear();
-    
-    if (this.currentPermission && this.authService.hasPermission(this.currentPermission)) {
-      this.viewContainer.createEmbeddedView(this.templateRef);
-    }
+  @Input() set hasPermission(permission: string) {
+    this.permissionSignal.set(permission);
   }
 }

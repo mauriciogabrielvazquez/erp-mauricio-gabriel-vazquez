@@ -9,6 +9,8 @@ import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
+import { UserService } from '../../services/users/user.service'; 
+import { TicketService } from '../../services/tickets/ticket.service';
 
 type UserModel = {
   username: string;
@@ -18,7 +20,6 @@ type UserModel = {
   phone: string;
 };
 
-// Interfaz para la lista de tareas del usuario
 interface UserTicket {
   id: string;
   title: string;
@@ -45,22 +46,28 @@ interface UserTicket {
 })
 export class UserComponent implements OnInit {
   editMode = false;
+  currentUserId = localStorage.getItem('userId') || ''; 
 
   user: UserModel = {
-    username: 'mauricio_gv',
-    email: 'mauricio@gmail.com',
-    fullName: 'Mauricio Gabriel Vázquez',
-    address: 'Av. Siempre Viva 742, Qro.',
-    phone: '4421234567'
+    username: 'Cargando...',
+    email: '',
+    fullName: 'Cargando...',
+    address: '',
+    phone: ''
   };
 
+  // Vaciamos los tickets estáticos (falsos) para reflejar la realidad
   assignedTickets: UserTicket[] = [];
   stats = { total: 0, pending: 0, inProgress: 0, done: 0 };
 
   form;
 
-  constructor(private fb: FormBuilder, private msg: MessageService) {
-    // Formulario reactivo limpio
+  constructor(
+    private fb: FormBuilder, 
+    private msg: MessageService,
+    private userService: UserService,
+    private ticketService: TicketService
+  ) {
     this.form = this.fb.group({
       username: [''],
       email: [''],
@@ -71,19 +78,56 @@ export class UserComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadToForm();
-    this.loadTickets();
+    this.loadRealUserData();
+    this.calculateStats();
+    this.loadUserTickets();
   }
 
-  loadTickets() {
-    // Simulando los tickets asignados al usuario para mostrar la carga de trabajo
-    this.assignedTickets = [
-      { id: 'TK-010', title: 'Revisar logs de servidor', status: 'Pendiente', priority: 'Alta' },
-      { id: 'TK-011', title: 'Actualizar dependencias en Angular', status: 'En Progreso', priority: 'Media' },
-      { id: 'TK-012', title: 'Corregir bug visual en menú', status: 'Hecho', priority: 'Baja' }
-    ];
+  loadRealUserData() {
+    if (!this.currentUserId) return;
 
-    // Calculando el resumen para las tarjetas
+    this.userService.getUsers().subscribe({
+      next: (res: any) => {
+        // Buscamos al usuario en la lista devuelta por el servidor
+        const usuarioReal = res.data.find((u: any) => u.id === this.currentUserId);
+
+        if (usuarioReal) {
+          this.user = {
+            username: usuarioReal.username,
+            email: usuarioReal.email,
+            fullName: usuarioReal.nombre_completo,
+            address: usuarioReal.direccion || 'Sin especificar',
+            phone: usuarioReal.telefono || 'Sin especificar'
+          };
+          this.loadToForm();
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar el perfil:', err);
+        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la información del perfil.' });
+      }
+    });
+  }
+
+  loadUserTickets() {
+    if (!this.currentUserId) return;
+
+    this.ticketService.getTicketsByUser(this.currentUserId).subscribe({
+      next: (res) => {
+        this.assignedTickets = res.data.map((t: any) => ({
+          id: t.id.substring(0, 8).toUpperCase(),
+          title: t.titulo,
+          status: t.estado,
+          priority: t.prioridad
+        }));
+        
+        this.calculateStats();
+      },
+      error: (err) => console.error('Error cargando los tickets del usuario', err)
+    });
+  }
+
+  calculateStats() {
     this.stats = {
       total: this.assignedTickets.length,
       pending: this.assignedTickets.filter(t => t.status === 'Pendiente').length,
@@ -106,21 +150,41 @@ export class UserComponent implements OnInit {
     this.loadToForm();
   }
 
+  // ⚡ ACTUALIZADO: Ahora guarda los datos en tu base de datos
   save() {
-    // Al guardar, tomamos los valores sin restricciones
-    this.user = {
-      username: this.form.value.username ?? '',
-      email: this.form.value.email ?? '',
-      fullName: this.form.value.fullName ?? '',
-      address: this.form.value.address ?? '',
-      phone: this.form.value.phone ?? '',
+    if (this.form.invalid) return;
+
+    // Preparamos los datos con los nombres de columnas de tu base de datos
+    const updatedData = {
+      nombre_completo: this.form.value.fullName,
+      username: this.form.value.username,
+      email: this.form.value.email,
+      direccion: this.form.value.address,
+      telefono: this.form.value.phone
     };
 
-    this.editMode = false;
-    this.msg.add({ severity: 'success', summary: 'Éxito', detail: 'Perfil actualizado correctamente.' });
+    this.userService.updateUser(this.currentUserId, updatedData).subscribe({
+      next: () => {
+        this.user = {
+          username: updatedData.username ?? '',
+          email: updatedData.email ?? '',
+          fullName: updatedData.nombre_completo ?? '',
+          address: updatedData.direccion ?? '',
+          phone: updatedData.telefono ?? ''
+        };
+        this.editMode = false;
+        
+        localStorage.setItem('username', this.user.username);
+        
+        this.msg.add({ severity: 'success', summary: 'Éxito', detail: 'Perfil actualizado correctamente en el sistema.' });
+      },
+      error: (err) => {
+        console.error('Error al actualizar:', err);
+        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar los cambios.' });
+      }
+    });
   }
 
-  // Método para el color de los tags en la tabla
   getSeverity(status: string) {
     switch (status) {
       case 'Hecho': return 'success';

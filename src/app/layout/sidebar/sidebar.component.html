@@ -1,4 +1,5 @@
 <div class="flex h-screen">
+  
   <p-sidebar [(visible)]="sidebarVisible" styleClass="w-20rem flex flex-column">
     
     <ng-template pTemplate="header">
@@ -53,19 +54,30 @@
         </p-button>
       </div>
 
-      <div class="px-3">
-        <div class="surface-100 p-3 border-round-lg flex align-items-center gap-3">
-          <p-avatar icon="pi pi-info-circle" shape="circle" styleClass="bg-white text-primary"></p-avatar>
-          <div class="flex flex-column">
-            <span class="text-xs text-600">Sistema Escolar</span>
-            <span class="text-xs font-bold text-900">Versión 19.0.0</span>
+      <div class="mt-auto">
+        
+        <div class="px-3 pb-3">
+          <p-button
+            label="Cerrar Sesión"
+            icon="pi pi-sign-out"
+            styleClass="p-button-text w-full justify-content-start text-red-500 hover:bg-red-50"
+            (onClick)="logout()">
+          </p-button>
+        </div>
+
+        <div class="px-3">
+          <div class="surface-100 p-3 border-round-lg flex align-items-center gap-3">
+            <p-avatar icon="pi pi-info-circle" shape="circle" styleClass="bg-white text-primary"></p-avatar>
+            <div class="flex flex-column">
+              <span class="text-xs text-600">Sistema Escolar</span>
+              <span class="text-xs font-bold text-900">Versión 19.0.0</span>
+            </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   </p-sidebar>
-  
   <div class="p-3">
     <p-button 
       (onClick)="sidebarVisible = true" 
@@ -80,4 +92,5 @@
   <div class="flex-1 p-4 surface-ground overflow-y-auto">
     <router-outlet></router-outlet>
   </div>
+  
 </div>

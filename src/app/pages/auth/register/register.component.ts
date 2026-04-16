@@ -7,6 +7,7 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
+import { AuthService } from  '../../../services/auth.service';
 
 const SPECIALS = `!@#$%^&*()_+-=[]{};':"\\|,.<>/?`;
 
@@ -41,7 +42,12 @@ export class RegisterComponent {
   readonly specials = SPECIALS;
   form;
   
-  constructor(private fb: FormBuilder, private router: Router) {
+  // 2. AQUÍ ES DONDE SE INYECTA REALMENTE EL SERVICIO
+  constructor(
+    private fb: FormBuilder, 
+    private router: Router, 
+    private authService: AuthService
+  ) {
     this.form = this.fb.group(
       {
         username: ['', [Validators.required, Validators.minLength(3)]],
@@ -66,8 +72,26 @@ export class RegisterComponent {
   save() {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
+    const val = this.form.value;
+    const payload = {
+      nombre_completo: val.fullName,
+      username: val.username,
+      email: val.email,
+      password: val.password,
+      direccion: val.address, 
+      telefono: val.phone     
+    };
 
-    this.router.navigate(['/auth/login']);
+    this.authService.register(payload).subscribe({
+      next: (response) => {
+        console.log('Registro exitoso en Supabase:', response);
+        this.router.navigate(['/auth/login']);
+      },
+      error: (err) => {
+        console.error('Error al registrar:', err);
+        alert(err.error?.data?.message || 'Error al conectar con el servidor');
+      }
+    });
   }
 
   get f() { return this.form.controls; }

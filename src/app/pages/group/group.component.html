@@ -151,13 +151,16 @@
     
     <div class="flex gap-2 p-inputgroup">
       <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
-      <input 
-        pInputText 
-        class="flex-auto" 
-        placeholder="Nombre o correo del alumno..." 
-        [(ngModel)]="newUserInput" 
-        (keyup.enter)="addMember()" />
-      <p-button label="Añadir" icon="pi pi-plus" (onClick)="addMember()"></p-button>
+      <p-dropdown 
+        [options]="allUsers" 
+        [(ngModel)]="selectedUserId" 
+        placeholder="Selecciona un alumno para inscribir..." 
+        [filter]="true" 
+        filterBy="label"
+        styleClass="flex-auto"
+        appendTo="body">
+      </p-dropdown>
+      <p-button label="Inscribir" icon="pi pi-plus" (onClick)="addMember()" [disabled]="!selectedUserId"></p-button>
     </div>
 
     <div class="flex flex-column gap-2">
